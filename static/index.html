@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent with Sub-Agents</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            display: flex;
+            height: 70vh;
+        }
+        
+        .input-section {
+            width: 30%;
+            padding: 20px;
+            border-right: 2px solid #f0f0f0;
+            background: #fafafa;
+        }
+        
+        .chat-section {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: white;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .message.system {
+            background: #e3f2fd;
+            border-left-color: #2196F3;
+        }
+        
+        .message.tool_call {
+            background: #f3e5f5;
+            border-left-color: #9c27b0;
+        }
+        
+        .message.sub_agent_result {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        
+        .message.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        
+        .message.task_completed {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+            font-weight: bold;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .examples {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .examples h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .examples ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .examples li {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .status {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            float: right;
+        }
+        
+        .agent-indicator {
+            background: #ff9800;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Agent with Sub-Agent Spawning</h1>
+            <p>Intelligent document search with sub-agent capabilities for less powerful LLMs</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <h3>Ask a Question</h3>
+                <textarea id="questionInput" placeholder="Ask a question about the documentation or request a task that might benefit from sub-agents...
+
+Examples:
+- Find all references to 'authentication' in the API docs
+- Search for configuration examples in multiple directories
+- Analyze the getting started guide"></textarea>
+                
+                <button id="sendButton" onclick="sendQuestion()">
+                    🚀 Start Agent
+                </button>
+                
+                <div class="examples">
+                    <h4>💡 Sub-Agent Examples:</h4>
+                    <ul>
+                        <li><strong>Search tasks:</strong> "Find X in directory Y"</li>
+                        <li><strong>Analysis tasks:</strong> "Analyze file Z for topic W"</li>
+                        <li><strong>Simple tasks:</strong> "List files containing keyword K"</li>
+                    </ul>
+                    
+                    <h4>🎯 Best Practices:</h4>
+                    <ul>
+                        <li>Keep sub-agent tasks under 200 characters</li>
+                        <li>Use simple, clear language</li>
+                        <li>Break complex tasks into smaller pieces</li>
+                        <li>Provide specific context when possible</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="chat-section">
+                <div class="messages" id="messages">
+                    <div class="message system">
+                        <span class="timestamp">Ready</span>
+                        <strong>🤖 System:</strong> AI Agent ready! You can ask questions about documentation or request tasks that can be broken down using sub-agents.
+                    </div>
+                </div>
+                
+                <div class="status" id="status">
+                    Status: Ready to start
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isConnected = false;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                isConnected = true;
+                updateStatus("Connected to agent");
+                addMessage("system", "🔗 Connected to AI Agent with Sub-Agent capabilities", "");
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+            
+            ws.onclose = function() {
+                isConnected = false;
+                updateStatus("Disconnected");
+                addMessage("error", "❌ Connection lost. Refresh to reconnect.", "");
+            };
+            
+            ws.onerror = function(error) {
+                updateStatus("Connection error");
+                addMessage("error", "❌ WebSocket error occurred", "");
+            };
+        }
+
+        function handleMessage(data) {
+            const timestamp = new Date(data.timestamp || Date.now()).toLocaleTimeString();
+            
+            switch(data.type) {
+                case 'system':
+                    addMessage('system', `🤖 ${data.content}`, timestamp);
+                    break;
+                case 'loop_start':
+                    addMessage('system', `🔄 ${data.content}`, timestamp);
+                    break;
+                case 'thinking':
+                    updateStatus("Agent is thinking...");
+                    break;
+                case 'tool_call':
+                    const agentIndicator = data.content.includes('SUB-AGENT') ? 
+                        '<span class="agent-indicator">SUB-AGENT</span>' : '';
+                    addMessage('tool_call', `${agentIndicator}🔧 ${data.content}`, timestamp);
+                    break;
+                case 'tool_result':
+                    addMessage('tool_result', `📊 ${data.content}`, timestamp);
+                    break;
+                case 'sub_agent_result':
+                    addMessage('sub_agent_result', `🤖➡️ ${data.content}`, timestamp);
+                    break;
+                case 'task_completed':
+                    addMessage('task_completed', `🎉 ${data.content}`, timestamp);
+                    document.getElementById('sendButton').disabled = false;
+                    document.getElementById('sendButton').textContent = '🚀 Start Agent';
+                    updateStatus("Task completed");
+                    break;
+                case 'final_output':
+                    addMessage('task_completed', `📋 Final Result: ${data.content}`, timestamp);
+                    break;
+                case 'error':
+                    addMessage('error', `❌ ${data.content}`, timestamp);
+                    break;
+                case 'warning':
+                    addMessage('error', `⚠️ ${data.content}`, timestamp);
+                    document.getElementById('sendButton').disabled = false;
+                    document.getElementById('sendButton').textContent = '🚀 Start Agent';
+                    updateStatus("Ready");
+                    break;
+                case 'assistant_response':
+                    addMessage('assistant', `💭 ${data.content}`, timestamp);
+                    break;
+                default:
+                    addMessage('system', `${data.content}`, timestamp);
+            }
+        }
+
+        function addMessage(type, content, timestamp) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            messageDiv.innerHTML = `
+                <span class="timestamp">${timestamp}</span>
+                ${content}
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateStatus(status) {
+            document.getElementById('status').textContent = `Status: ${status}`;
+        }
+
+        function sendQuestion() {
+            const question = document.getElementById('questionInput').value.trim();
+            if (!question || !isConnected) return;
+            
+            // Add user message
+            addMessage('user', `❓ Question: ${question}`, new Date().toLocaleTimeString());
+            
+            // Send to agent
+            ws.send(JSON.stringify({
+                type: 'start_task',
+                message: question
+            }));
+            
+            // Update UI
+            document.getElementById('sendButton').disabled = true;
+            document.getElementById('sendButton').textContent = '🤖 Agent Working...';
+            updateStatus("Agent processing request...");
+            
+            // Clear input
+            document.getElementById('questionInput').value = '';
+        }
+
+        // Allow Enter to send (with Shift+Enter for new line)
+        document.getElementById('questionInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuestion();
+            }
+        });
+
+        // Connect on page load
+        window.onload = function() {
+            connectWebSocket();
+        };
+    </script>
+</body>
+</html>
