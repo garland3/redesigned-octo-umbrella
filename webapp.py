@@ -135,7 +135,7 @@ app = FastAPI(title="AI Agent WebSocket Interface")
 APP_STATE: Dict[str, Any] = { "tool_wrapper": None, "openai_tools": None }
 
 # Main Agent Configuration
-MAIN_MODEL_NAME = os.getenv("MAIN_MODEL_NAME", "llama-3.1-70b-versatile")
+MAIN_MODEL_NAME = os.getenv("MAIN_MODEL_NAME", "llama-3.3-70b-versatile")
 MAIN_MODEL_BASE_URL = os.getenv("MAIN_MODEL_BASE_URL", "https://api.groq.com/openai/v1/chat/completions")
 
 # Sub-Agent Configuration (can use different, less powerful model)

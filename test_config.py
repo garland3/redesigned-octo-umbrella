@@ -1,5 +1,13 @@
-#!/usr/bin/env # Load configuration
-MAIN_MODEL_NAME = os.getenv("MAIN_MODEL_NAME", "llama-3.1-70b-versatile")
+#!/usr/bin/env python3
+"""
+Configuration validation script for AI Agent with Sub-Agent Spawning.
+Tests model connectivity and validates configuration.
+"""
+
+import os
+
+# Load configuration
+MAIN_MODEL_NAME = os.getenv("MAIN_MODEL_NAME", "llama-3.3-70b-versatile")
 MAIN_MODEL_BASE_URL = os.getenv("MAIN_MODEL_BASE_URL", "https://api.groq.com/openai/v1/chat/completions")
 SUB_AGENT_MODEL_NAME = os.getenv("SUB_AGENT_MODEL_NAME", "llama-3.1-8b-instant")
 SUB_AGENT_MODEL_BASE_URL = os.getenv("SUB_AGENT_MODEL_BASE_URL", "https://api.groq.com/openai/v1/chat/completions")
@@ -13,10 +21,7 @@ SUB_AGENT_MODEL_API_KEY = os.getenv("SUB_AGENT_MODEL_API_KEY", GROQ_API_KEY)
 if not MAIN_MODEL_API_KEY and not SUB_AGENT_MODEL_API_KEY:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     MAIN_MODEL_API_KEY = OPENAI_API_KEY
-    SUB_AGENT_MODEL_API_KEY = OPENAI_API_KEY"""
-Configuration validation script for AI Agent with Sub-Agent Spawning.
-Tests model connectivity and validates configuration.
-"""
+    SUB_AGENT_MODEL_API_KEY = OPENAI_API_KEY
 
 import os
 import asyncio

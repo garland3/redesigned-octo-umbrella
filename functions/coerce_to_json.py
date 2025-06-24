@@ -3,7 +3,7 @@ JSON extraction utilities for function calls.
 """
 import json
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 
 def extract_function_json(text: str) -> Optional[Dict[str, Any]]:
